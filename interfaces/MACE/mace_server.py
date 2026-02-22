@@ -88,11 +88,58 @@ class MaceModel:
         torch_tools.set_default_dtype(default_dtype)
         self.device = str(torch_tools.init_device(device))
 
-        self.model = torch.jit.load(f=model_path, map_location=device).to(device)
+        import os
+        if os.path.isfile(model_path):
+            # Load from local file
+            try:
+                self.model = torch.jit.load(f=model_path, map_location=device).to(device)
+            except Exception:
+                log("Failed to load as TorchScript, trying as regular PyTorch model...")
+                self.model = torch.load(f=model_path, map_location=device, weights_only=False).to(device)
+        else:
+            # Try loading as a MACE foundation model (auto-downloads)
+            self.model = self._load_foundation_model(model_path, device)
+
         for param in self.model.parameters():
             param.requires_grad = False
 
         log("model loaded in %.2f s" % (time.time() - start_time))
+
+    def _load_foundation_model(self, model_name, device):
+        """
+        Load a MACE foundation model by name.
+        Supported names include:
+          - MACE-OFF23_medium.model, MACE-OFF23_small.model, MACE-OFF23_large.model
+          - medium, small, large (shorthand for MACE-OFF23)
+          - MACE-MP-0_medium.model, etc.
+        """
+        from mace.calculators.foundations_models import mace_off, mace_mp
+
+        name = model_name.replace('.model', '').strip()
+        log(f"Loading foundation model: {name}")
+
+        # Parse model family and size
+        name_lower = name.lower()
+        if name_lower in ('small', 'medium', 'large'):
+            size = name_lower
+            calc = mace_off(model=size, device=device, return_raw_model=True)
+        elif 'mace-off23' in name_lower or 'mace_off23' in name_lower:
+            size = name.split('_')[-1].lower()
+            if size not in ('small', 'medium', 'large'):
+                size = 'medium'
+            calc = mace_off(model=size, device=device, return_raw_model=True)
+        elif 'mace-mp' in name_lower or 'mace_mp' in name_lower:
+            size = name.split('_')[-1].lower()
+            if size not in ('small', 'medium', 'large'):
+                size = 'medium'
+            calc = mace_mp(model=size, device=device, return_raw_model=True)
+        else:
+            raise RuntimeError(
+                f"Unknown model '{model_name}'. Provide a path to a local .model file, "
+                f"or use a foundation model name like 'MACE-OFF23_medium.model' or 'medium'."
+            )
+
+        return calc
 
     def evaluate(self, atom_types, coords_bohr):
         """
@@ -213,7 +260,7 @@ def main():
     log("MACE model ready. Entering main loop.")
 
     # Main loop: receive coordinates, compute, send results
-    step = 0
+    eval_count = 0
     while True:
         # Receive natom (sent each step for protocol consistency)
         status = MPI.Status()
@@ -238,8 +285,8 @@ def main():
         # Transpose to (natom, 3) for ASE
         coords_bohr = coords.T.copy()
 
-        step += 1
-        log(f"Step {step}: evaluating...")
+        eval_count += 1
+        log(f"Evaluation {eval_count}: evaluating...")
 
         try:
             energy, forces = mace_model.evaluate(atom_types, coords_bohr)
@@ -253,7 +300,7 @@ def main():
             forces_send = forces.T.copy()
             abin_comm.Send([forces_send, MPI.DOUBLE], dest=0, tag=0)
 
-            log(f"Step {step}: energy = {energy:.10f} Hartree")
+            log(f"Evaluation {eval_count}: energy = {energy:.10f} Hartree")
 
         except Exception as e:
             log(f"ERROR during evaluation: {e}")
