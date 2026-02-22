@@ -26,7 +26,7 @@ module mod_mace_mpi
    integer :: mace_mpi_milisleep = 50
 
    ! MACE configuration parameters (read from &mace namelist in init.F90)
-   character(len=1024) :: mace_model = 'MACE-OFF23_medium.model'
+   character(len=1024) :: mace_model = 'MACE/MACE-OFF23_medium.model'
    character(len=16) :: mace_device = 'cpu'
    character(len=16) :: mace_default_dtype = 'float64'
    integer :: mace_batch_size = 64
@@ -113,7 +113,7 @@ contains
 
          if ((MPI_WTIME() - timer) > mace_max_mpi_wait_time) then
             call fatal_error(__FILE__, __LINE__, &
-               & 'Could not open file '//portfile)
+            & 'Could not open file '//portfile)
          end if
 
          write (stdout, '(A)') 'WARNING: Cannot open file '//portfile
@@ -123,7 +123,7 @@ contains
       read (iunit, '(A)', iostat=iost) port_name
       if (iost /= 0) then
          call fatal_error(__FILE__, __LINE__, &
-            & 'Could not read file '//portfile)
+         & 'Could not read file '//portfile)
       end if
 
       close (iunit, status='delete')
@@ -245,13 +245,13 @@ contains
       end if
 
       config_str = 'model='//trim(mace_model)// &
-         & ';device='//trim(mace_device)// &
-         & ';default_dtype='//trim(mace_default_dtype)// &
-         & ';batch_size='//trim(adjustl(batch_str))// &
-         & ';compute_stress='//trim(stress_str)// &
-         & ';return_contributions='//trim(contrib_str)// &
-         & ';info_prefix='//trim(mace_info_prefix)// &
-         & ';head='//trim(mace_head)
+      & ';device='//trim(mace_device)// &
+      & ';default_dtype='//trim(mace_default_dtype)// &
+      & ';batch_size='//trim(adjustl(batch_str))// &
+      & ';compute_stress='//trim(stress_str)// &
+      & ';return_contributions='//trim(contrib_str)// &
+      & ';info_prefix='//trim(mace_info_prefix)// &
+      & ';head='//trim(mace_head)
 
       if (idebug > 1) then
          write (stdout, '(A)') 'MACE: Sending config: '
@@ -260,7 +260,7 @@ contains
       end if
 
       call MPI_Send(config_str, len_trim(config_str), MPI_CHARACTER, &
-         & 0, MACE_TAG_DATA, comm, ierr)
+      & 0, MACE_TAG_DATA, comm, ierr)
       call handle_mpi_error(ierr)
    end subroutine send_mace_config
 
