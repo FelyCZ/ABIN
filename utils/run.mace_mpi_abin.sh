@@ -21,8 +21,13 @@ ABIN_IN=input.in
 GEOM_IN=mini.xyz
 VELOC_IN=
 
+# Path to Python with MACE dependencies (mpi4py, mace-torch, torch, ase, numpy).
+# Uncomment and set to your Python interpreter:
+#export MACE_PYTHON=/path/to/my/conda/envs/mace/bin/python
+MACE_PYTHON="${MACE_PYTHON:-python3}"
+
 # Path to MACE server script
-MACE_SERVER=/MACE/mace_server.py
+MACE_SERVER=MACE/mace_server.py
 
 ################
 
@@ -56,10 +61,6 @@ function validate_inputs() {
 # Validate input files exist
 validate_inputs
 
-# SET THE ENVIRONMENT
-# If you have custom environment setup, source it here:
-# source SetEnvironment.sh ABIN
-
 # Determine MPIRUN
 if [[ -z ${MPI_PATH-} ]];then
   MPIRUN=mpirun
@@ -81,7 +82,7 @@ echo "=============================="
 declare -A job_pids
 
 # LAUNCH MACE SERVER
-$MPIRUN_MACE python $MACE_SERVER > mace_server.out 2>&1 &
+$MPIRUN_MACE $MACE_PYTHON $MACE_SERVER > mace_server.out 2>&1 &
 job_pids[mace]=$!
 echo "Launched MACE server (PID: ${job_pids[mace]})"
 
