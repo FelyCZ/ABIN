@@ -28,12 +28,12 @@ inose=0,                ! no thermostat (NVE)
 MACE model configuration
 
 &mace
-mace_model='MACE_compiled.model',  ! path to compiled MACE model (required)
-mace_device='cpu',                  ! 'cpu' or 'cuda' (defaults to 'cpu')
-mace_default_dtype='float64',       ! 'float32' or 'float64' (defaults to 'float64')
-mace_batch_size=64,                 ! batch size for evaluation (defaults to 64)
-mace_compute_stress=.false.,        ! compute stress tensor (defaults to .false.)
-mace_return_contributions=.false.,  ! return energy contributions per body order (defaults to .false.)
-mace_info_prefix='MACE_',           ! prefix for output keys (defaults to 'MACE_')
-mace_head='',                       ! model head (optional, for multi-head models) (defaults to '')
+mace_model='MACE/MACE_compiled.model',  ! path to compiled MACE model (required)
+mace_device='cpu',                      ! 'cpu' or 'cuda' (defaults to 'cpu')
+mace_default_dtype='float64',           ! 'float32' or 'float64' (defaults to 'float64')
+mace_batch_size=64,                     ! batch size for evaluation (defaults to 64)
+mace_compute_stress=.false.,            ! compute stress tensor (defaults to .false.)
+mace_return_contributions=.false.,      ! return energy contributions per body order (defaults to .false.)
+mace_info_prefix='MACE_',               ! prefix for output keys (defaults to 'MACE_')
+mace_head='',                           ! model head (optional, for multi-head models) (defaults to '')
 /
