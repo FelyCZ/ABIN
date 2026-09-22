@@ -240,12 +240,15 @@ def connect_to_abin():
 # https://docs.python.org/3/library/sys.html#sys.excepthook
 def exception_handler(shutdown_callback, exception_type, exception, traceback):
     """Try to gracefully shutdown communication with ABIN upon uncaught exceptions"""
+    # note: logger.exception cannot be used here because sys.exc_info() returns
+    # (None, None, None) inside sys.excepthook
+    # exc_info has to be passed explicitly, or logger.exception() has to be called inside except block
     logger.error(
         f"Unexpected {exception_type.__name__}: {exception}",
         exc_info=(exception_type, exception, traceback),
     )
     # Restore original exception handling to prevent endless loop
-    # in case of uncaught excpetion during shutdown
+    # in case of uncaught exception during shutdown
     sys.excepthook = sys.__excepthook__
     shutdown_callback()
     sys.exit(1)
