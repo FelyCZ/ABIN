@@ -10,3 +10,16 @@ make.vars
 bin/
 # from fprettify
 __pycache__/
+
+mpich/
+.examples/TEST*/
+.examples/.venv/
+.examples/*/*.dat
+.examples/*/*.out
+.examples/*/*.old
+.examples/*/MACE/
+.examples/*/movie.xyz
+.examples/*/restart.xyz
+
+
+
